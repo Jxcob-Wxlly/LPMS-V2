@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose draws the whole UI; this theme only styles the window before the first frame. -->
+    <style name="Theme.Lpms" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/lpms_window_background</item>
+    </style>
+</resources>
