@@ -1,6 +1,6 @@
 # LPMS - Literacy Programme Management System
 
-[![CI](https://github.com/YOUR-GITHUB-USERNAME/lpms/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR-GITHUB-USERNAME/lpms/actions/workflows/ci.yml)
+[![CI](https://github.com/Jxcob-Wxlly/LPMS-V2/actions/workflows/ci.yml/badge.svg)](https://github.com/Jxcob-Wxlly/LPMS-V2/actions/workflows/ci.yml)
 
 **Client:** READ Educational Trust  **Team:** Team Point Blank  **Module:** XISD6329 (Task 2)
 
