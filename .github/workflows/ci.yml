@@ -1,0 +1,114 @@
+# LPMS - continuous integration and delivery (GitHub Actions)
+# Maps to the DevOps lifecycle: Code -> Build -> Test -> Release -> Deploy -> Monitor (see docs/devops-lifecycle.md)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API - build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore api/Lpms.sln
+
+      - name: Build
+        run: dotnet build api/Lpms.sln --configuration Release --no-restore
+
+      - name: Test
+        run: >
+          dotnet test api/Lpms.sln --configuration Release --no-build
+          --logger "trx;LogFileName=api-test-results.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: TestResults/*.trx
+
+      - name: Publish API
+        run: dotnet publish api/src/Lpms.Api/Lpms.Api.csproj --configuration Release --no-build --output publish
+
+      - name: Upload published API
+        uses: actions/upload-artifact@v4
+        with:
+          name: lpms-api
+          path: publish
+
+  android:
+    name: Android - unit tests and debug APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Make the Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload unit test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-reports
+          path: android/app/build/reports/tests
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: lpms-teacher-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+
+  deploy:
+    name: Deploy API to Azure App Service
+    needs: api
+    # Only runs on main once the repository variable AZURE_WEBAPP_NAME is set (Settings > Secrets and variables > Actions).
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.AZURE_WEBAPP_NAME != ''
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: lpms-api
+          path: publish
+
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: publish
+
+      - name: Smoke test (Monitor stage)
+        run: |
+          sleep 20
+          curl --fail --retry 5 --retry-delay 15 --retry-all-errors "https://${{ vars.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/health"

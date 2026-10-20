@@ -1,0 +1,104 @@
+# LPMS - Azure DevOps pipeline (same stages as .github/workflows/ci.yml)
+# Pipeline variables to create in Azure DevOps (Pipelines > Edit > Variables):
+#   azureSubscription  - name of the Azure Resource Manager service connection
+#   webAppName         - name of the Azure App Service that hosts the API
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: Release
+
+stages:
+  - stage: Build
+    displayName: Build and test
+    jobs:
+      - job: Api
+        displayName: API - restore, build, test, publish
+        steps:
+          - task: UseDotNet@2
+            inputs:
+              packageType: sdk
+              version: 8.0.x
+
+          - task: DotNetCoreCLI@2
+            displayName: Restore
+            inputs:
+              command: restore
+              projects: api/Lpms.sln
+
+          - task: DotNetCoreCLI@2
+            displayName: Build
+            inputs:
+              command: build
+              projects: api/Lpms.sln
+              arguments: --configuration $(buildConfiguration) --no-restore
+
+          - task: DotNetCoreCLI@2
+            displayName: Test
+            inputs:
+              command: test
+              projects: api/tests/Lpms.Api.Tests/Lpms.Api.Tests.csproj
+              arguments: --configuration $(buildConfiguration) --no-build
+
+          - task: DotNetCoreCLI@2
+            displayName: Publish
+            inputs:
+              command: publish
+              publishWebProjects: false
+              projects: api/src/Lpms.Api/Lpms.Api.csproj
+              arguments: --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api
+              zipAfterPublish: true
+
+          - publish: $(Build.ArtifactStagingDirectory)/api
+            artifact: lpms-api
+
+      - job: Android
+        displayName: Android - unit tests and debug APK
+        steps:
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: 17
+              jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
+
+          - script: chmod +x gradlew && ./gradlew testDebugUnitTest assembleDebug --stacktrace
+            displayName: Gradle test and assembleDebug
+            workingDirectory: android
+
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: android/app/build/test-results/testDebugUnitTest/*.xml
+
+          - publish: android/app/build/outputs/apk/debug
+            artifact: lpms-teacher-debug-apk
+
+  - stage: Deploy
+    displayName: Deploy to Azure App Service
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['webAppName'], ''))
+    jobs:
+      - deployment: DeployApi
+        displayName: Deploy API
+        environment: production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  inputs:
+                    azureSubscription: $(azureSubscription)
+                    appType: webAppLinux
+                    appName: $(webAppName)
+                    package: $(Pipeline.Workspace)/lpms-api/*.zip
