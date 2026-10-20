@@ -41,9 +41,12 @@ public class HealthController : ApiControllerBase
 {
     private readonly LpmsDbContext _db;
 
-    public HealthController(LpmsDbContext db)
+    private readonly ILogger<HealthController> _logger;
+
+    public HealthController(LpmsDbContext db, ILogger<HealthController> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     /// <summary>Returns 200 when the API can reach the database, otherwise 503.</summary>
@@ -55,8 +58,9 @@ public class HealthController : ApiControllerBase
         {
             canConnect = await _db.Database.CanConnectAsync(ct);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Health check could not reach the database.");
             canConnect = false;
         }
 
