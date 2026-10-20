@@ -1,0 +1,32 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+publish/
+
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+*.apk
+*.aab
+.idea/
+*.iml
+
+# Secrets and local overrides - never commit these
+appsettings.Production.json
+appsettings.*.local.json
+*.pubxml
+*.publishsettings
+*.keystore
+.env
+
+# Misc
+.DS_Store
+Thumbs.db
+__pycache__/
