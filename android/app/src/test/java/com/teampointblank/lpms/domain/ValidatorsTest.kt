@@ -188,4 +188,23 @@ class ValidatorsTest {
         assertNotNull(Validators.validateSessionTimes(java.time.LocalTime.of(10, 0), java.time.LocalTime.of(9, 0)))
         assertNull(Validators.validateSessionTimes(java.time.LocalTime.of(9, 0), java.time.LocalTime.of(10, 0)))
     }
+
+    // ----- messages -----
+
+    @Test fun message_blank_isRejected() {
+        assertEquals("Type a message first.", Validators.validateMessage(""))
+        assertEquals("Type a message first.", Validators.validateMessage("   "))
+    }
+
+    @Test fun message_atTheLimit_isAccepted() {
+        assertNull(Validators.validateMessage("a".repeat(Validators.MAX_MESSAGE_LENGTH)))
+    }
+
+    @Test fun message_overTheLimit_isRejected() {
+        assertNotNull(Validators.validateMessage("a".repeat(Validators.MAX_MESSAGE_LENGTH + 1)))
+    }
+
+    @Test fun message_normalText_isAccepted() {
+        assertNull(Validators.validateMessage("Good morning, Ms Zulu."))
+    }
 }

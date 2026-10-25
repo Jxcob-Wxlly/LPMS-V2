@@ -15,10 +15,21 @@ object Validators {
     const val MAX_LOGIN_LENGTH = 100
     const val MAX_NOTES_LENGTH = 255
     const val MAX_SEARCH_LENGTH = 50
+    const val MAX_MESSAGE_LENGTH = 1000
     const val MIN_PASSWORD_LENGTH = 8
     const val MAX_PASSWORD_LENGTH = 100
 
     private val scorePattern = Regex("^\\d+(\\.\\d{1,2})?$")
+
+    /** A chat message: not blank and at most [MAX_MESSAGE_LENGTH] characters. */
+    fun validateMessage(value: String): String? {
+        val v = value.trim()
+        return when {
+            v.isEmpty() -> "Type a message first."
+            v.length > MAX_MESSAGE_LENGTH -> "That message is too long (maximum $MAX_MESSAGE_LENGTH characters)."
+            else -> null
+        }
+    }
 
     fun validateIdentifier(value: String): String? {
         val v = value.trim()

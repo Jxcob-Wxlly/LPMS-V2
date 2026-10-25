@@ -1,6 +1,7 @@
 package com.teampointblank.lpms.domain
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -11,6 +12,7 @@ object Formatters {
     private val longDateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH)
     private val weekdayDateFormat = DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)
     private val shortDateFormat = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH)
+    private val messageDateTimeFormat = DateTimeFormatter.ofPattern("d MMM HH:mm", Locale.ENGLISH)
     private val clockFormat = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH)
     private val southAfrica: ZoneId = ZoneId.of("Africa/Johannesburg")
 
@@ -35,6 +37,17 @@ object Formatters {
         if (iso.isNullOrBlank()) "" else LocalTime.parse(iso).format(clockFormat)
     } catch (e: Exception) {
         iso ?: ""
+    }
+
+    /** "14:05" for messages sent today, otherwise "25 Oct 14:05". Falls back to the raw text. */
+    fun messageTime(iso: String?, today: LocalDate): String {
+        if (iso.isNullOrBlank()) return ""
+        return try {
+            val at = LocalDateTime.parse(iso)
+            if (at.toLocalDate() == today) at.format(clockFormat) else at.format(messageDateTimeFormat)
+        } catch (e: Exception) {
+            iso
+        }
     }
 
     fun timeRange(start: String?, end: String?): String = "${time(start)} - ${time(end)}"

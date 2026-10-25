@@ -101,6 +101,16 @@ class LpmsRepository(
         if (!response.isSuccessful) throw HttpException(response)
     }
 
+    suspend fun conversations(): ApiResult<List<ConversationSummary>> = authed { it.conversations() }
+
+    suspend fun thread(learnerId: Int, parentUserId: Int): ApiResult<List<ChatMessage>> =
+        authed { it.thread(learnerId, parentUserId) }
+
+    suspend fun sendMessage(learnerId: Int, parentUserId: Int, body: String): ApiResult<ChatMessage> =
+        authed { it.sendMessage(learnerId, parentUserId, SendMessageRequest(body.trim())) }
+
+    suspend fun announcements(): ApiResult<List<Announcement>> = authed { it.announcements() }
+
     /** Anonymous health check, used by Settings > "Test connection". */
     suspend fun checkServer(): ApiResult<HealthInfo> = safeApiCall { provider.api().health() }
 

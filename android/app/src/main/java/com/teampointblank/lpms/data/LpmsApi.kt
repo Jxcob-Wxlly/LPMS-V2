@@ -60,6 +60,22 @@ interface LpmsApi {
     @GET("api/dashboard/teacher")
     suspend fun dashboard(): TeacherDashboard
 
+    @GET("api/messages/conversations")
+    suspend fun conversations(): List<ConversationSummary>
+
+    @GET("api/messages/conversations/{learnerId}/{parentUserId}")
+    suspend fun thread(@Path("learnerId") learnerId: Int, @Path("parentUserId") parentUserId: Int): List<ChatMessage>
+
+    @POST("api/messages/conversations/{learnerId}/{parentUserId}")
+    suspend fun sendMessage(
+        @Path("learnerId") learnerId: Int,
+        @Path("parentUserId") parentUserId: Int,
+        @Body body: SendMessageRequest
+    ): ChatMessage
+
+    @GET("api/announcements")
+    suspend fun announcements(): List<Announcement>
+
     @GET("api/health")
     suspend fun health(): HealthInfo
 }

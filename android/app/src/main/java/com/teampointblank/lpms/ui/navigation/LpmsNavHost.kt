@@ -24,6 +24,10 @@ import com.teampointblank.lpms.ui.login.LoginViewModel
 import com.teampointblank.lpms.ui.login.RegisterScreen
 import com.teampointblank.lpms.ui.login.RegisterViewModel
 import com.teampointblank.lpms.ui.lpmsViewModel
+import com.teampointblank.lpms.ui.messages.ChatScreen
+import com.teampointblank.lpms.ui.messages.ChatViewModel
+import com.teampointblank.lpms.ui.messages.MessagesScreen
+import com.teampointblank.lpms.ui.messages.MessagesViewModel
 import com.teampointblank.lpms.ui.parent.ChildReportScreen
 import com.teampointblank.lpms.ui.parent.ChildReportViewModel
 import com.teampointblank.lpms.ui.parent.ParentHomeScreen
@@ -159,6 +163,30 @@ fun LpmsNavHost(container: AppContainer) {
             val learnerId = entry.arguments?.getInt(Routes.ARG_LEARNER_ID) ?: 0
             val viewModel = lpmsViewModel { LearnerDetailViewModel(container.repository, learnerId) }
             LearnerDetailScreen(viewModel = viewModel, onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.MESSAGES) {
+            val isParent = container.auth.state.value.isParent
+            val viewModel = lpmsViewModel { MessagesViewModel(container.repository, isParent) }
+            MessagesScreen(
+                viewModel = viewModel,
+                onNavigate = navigateToTab,
+                onOpenChat = { learnerId, parentUserId -> navController.navigate(Routes.chat(learnerId, parentUserId)) }
+            )
+        }
+
+        composable(
+            route = Routes.CHAT,
+            arguments = listOf(
+                navArgument(Routes.ARG_LEARNER_ID) { type = NavType.IntType },
+                navArgument(Routes.ARG_PARENT_ID) { type = NavType.IntType }
+            )
+        ) { entry ->
+            val learnerId = entry.arguments?.getInt(Routes.ARG_LEARNER_ID) ?: 0
+            val parentUserId = entry.arguments?.getInt(Routes.ARG_PARENT_ID) ?: 0
+            val isParent = container.auth.state.value.isParent
+            val viewModel = lpmsViewModel { ChatViewModel(container.repository, learnerId, parentUserId) }
+            ChatScreen(viewModel = viewModel, isParent = isParent, onBack = { navController.popBackStack() })
         }
 
         composable(Routes.SETTINGS) {

@@ -58,4 +58,21 @@ class FormattersTest {
     @Test fun weekdayDate_falls_back_to_the_text() {
         assertEquals("not a date", Formatters.weekdayDate("not a date"))
     }
+
+    @Test fun messageTime_showsOnlyTheClockForToday() {
+        val today = java.time.LocalDate.of(2026, 10, 25)
+        assertEquals("14:05", Formatters.messageTime("2026-10-25T14:05:00", today))
+    }
+
+    @Test fun messageTime_showsTheDateForEarlierDays() {
+        val today = java.time.LocalDate.of(2026, 10, 25)
+        assertEquals("23 Oct 09:30", Formatters.messageTime("2026-10-23T09:30:00", today))
+        assertEquals("23 Oct 09:30", Formatters.messageTime("2026-10-23T09:30:00.1234567", today))
+    }
+
+    @Test fun messageTime_fallsBackToTheTextOrNothing() {
+        val today = java.time.LocalDate.of(2026, 10, 25)
+        assertEquals("", Formatters.messageTime(null, today))
+        assertEquals("soon", Formatters.messageTime("soon", today))
+    }
 }

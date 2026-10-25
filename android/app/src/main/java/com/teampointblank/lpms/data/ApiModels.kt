@@ -142,3 +142,39 @@ data class CreateSessionRequest(
     val startTime: String,
     val endTime: String
 )
+
+data class ConversationSummary(
+    val learnerId: Int = 0,
+    val learnerName: String = "",
+    val grade: String = "",
+    val parentUserId: Int = 0,
+    val parentName: String = "",
+    val schoolName: String = "",
+    val lastMessage: String? = null,
+    val lastSentAt: String? = null,
+    val lastSenderName: String? = null,
+    val messageCount: Int = 0
+)
+
+data class ChatMessage(
+    val messageId: Int = 0,
+    val senderUserId: Int = 0,
+    val senderName: String = "",
+    val senderRole: String = "",
+    val body: String = "",
+    val sentAt: String = "",
+    val isMine: Boolean = false
+)
+
+data class SendMessageRequest(val body: String)
+
+data class Announcement(
+    val announcementId: Int = 0,
+    val title: String = "",
+    val body: String = "",
+    val audience: String = "",
+    val schoolId: Int? = null,
+    val schoolName: String? = null,
+    val authorName: String = "",
+    val createdAt: String = ""
+)

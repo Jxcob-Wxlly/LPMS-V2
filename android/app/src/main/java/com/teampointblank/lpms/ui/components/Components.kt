@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Settings
@@ -230,11 +231,13 @@ private val bottomItems = listOf(
     BottomItem(Routes.HOME, "Home", Icons.Outlined.Home),
     BottomItem(Routes.SESSIONS, "Sessions", Icons.Outlined.CalendarMonth),
     BottomItem(Routes.LEARNERS, "Learners", Icons.Outlined.People),
+    BottomItem(Routes.MESSAGES, "Messages", Icons.Outlined.ChatBubbleOutline),
     BottomItem(Routes.SETTINGS, "Settings", Icons.Outlined.Settings)
 )
 
 private val parentBottomItems = listOf(
     BottomItem(Routes.PARENT_HOME, "My children", Icons.Outlined.People),
+    BottomItem(Routes.MESSAGES, "Messages", Icons.Outlined.ChatBubbleOutline),
     BottomItem(Routes.SETTINGS, "Settings", Icons.Outlined.Settings)
 )
 
