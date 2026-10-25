@@ -34,6 +34,13 @@ object AttendanceLogic {
         return roster.any { saved[it.learnerId] != draft[it.learnerId] }
     }
 
+    /** Text on the save button: it counts down what is left to mark. */
+    fun saveLabel(notMarked: Int): String =
+        if (notMarked > 0) "Mark $notMarked more to save" else "Save attendance"
+
+    /** Save is available once every learner is marked and something changed. */
+    fun canSave(notMarked: Int, hasChanges: Boolean): Boolean = notMarked == 0 && hasChanges
+
     /** Entries in roster order, ready to send to the API. Learners that are not marked are left out. */
     fun entriesToSave(roster: List<RosterEntry>, draft: Map<Int, String>): List<AttendanceEntry> =
         roster.mapNotNull { r -> draft[r.learnerId]?.let { AttendanceEntry(r.learnerId, it) } }

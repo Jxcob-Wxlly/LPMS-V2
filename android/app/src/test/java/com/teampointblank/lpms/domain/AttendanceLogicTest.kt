@@ -67,4 +67,16 @@ class AttendanceLogicTest {
         assertFalse(AttendanceLogic.canRecord("2026-10-17", today))
         assertTrue(AttendanceLogic.canRecord("garbage", today))
     }
+
+    @Test fun saveLabel_countsDownWhatIsLeft() {
+        assertEquals("Mark 8 more to save", AttendanceLogic.saveLabel(8))
+        assertEquals("Mark 1 more to save", AttendanceLogic.saveLabel(1))
+        assertEquals("Save attendance", AttendanceLogic.saveLabel(0))
+    }
+
+    @Test fun canSave_needsEveryoneMarkedAndAChange() {
+        assertFalse(AttendanceLogic.canSave(notMarked = 3, hasChanges = true))
+        assertFalse(AttendanceLogic.canSave(notMarked = 0, hasChanges = false))
+        assertTrue(AttendanceLogic.canSave(notMarked = 0, hasChanges = true))
+    }
 }

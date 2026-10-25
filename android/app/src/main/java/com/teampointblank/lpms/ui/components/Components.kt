@@ -153,7 +153,9 @@ fun HeaderBlock(
 fun LpmsTopBar(
     title: String,
     onBack: (() -> Unit)? = null,
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
+    subtitle: String? = null,
+    footer: (@Composable ColumnScope.() -> Unit)? = null
 ) {
     val palette = LpmsColors.palette
     HeaderBlock(bottomPadding = 20.dp) {
@@ -190,6 +192,14 @@ fun LpmsTopBar(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
+        if (subtitle != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(subtitle, color = palette.onHeaderMuted, style = MaterialTheme.typography.titleMedium)
+        }
+        if (footer != null) {
+            Spacer(Modifier.height(18.dp))
+            footer()
+        }
     }
 }
 
@@ -797,4 +807,21 @@ fun ConfirmDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(dismissLabel, color = palette.textMuted) } }
     )
+}
+
+
+/** Small count tile used inside the teal header (Present / Absent / Not marked). */
+@Composable
+fun HeaderStat(label: String, value: Int, modifier: Modifier = Modifier) {
+    val palette = LpmsColors.palette
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(palette.onHeader.copy(alpha = 0.12f))
+            .padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(value.toString(), color = palette.onHeader, style = MaterialTheme.typography.headlineMedium)
+        Text(label, color = palette.onHeaderMuted, style = MaterialTheme.typography.bodyMedium)
+    }
 }

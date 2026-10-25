@@ -134,7 +134,7 @@ private fun DashboardContent(
                 LpmsCard(onClick = onShowSessions) {
                     Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            "${Formatters.plural(data.pendingAttendance, "session")} still need attendance",
+                            "${Formatters.plural(data.pendingAttendance, "session")} still ${if (data.pendingAttendance == 1) "needs" else "need"} attendance",
                             color = palette.text,
                             style = MaterialTheme.typography.titleMedium
                         )

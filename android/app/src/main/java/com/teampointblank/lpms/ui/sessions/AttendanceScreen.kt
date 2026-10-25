@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,13 +40,13 @@ import com.teampointblank.lpms.domain.Formatters
 import com.teampointblank.lpms.ui.components.ConfirmDialog
 import com.teampointblank.lpms.ui.components.DashedEmpty
 import com.teampointblank.lpms.ui.components.ErrorState
+import com.teampointblank.lpms.ui.components.HeaderStat
 import com.teampointblank.lpms.ui.components.InfoBanner
 import com.teampointblank.lpms.ui.components.LoadingBox
 import com.teampointblank.lpms.ui.components.LpmsCard
 import com.teampointblank.lpms.ui.components.LpmsSnackbarHost
 import com.teampointblank.lpms.ui.components.LpmsTopBar
 import com.teampointblank.lpms.ui.components.PrimaryButton
-import com.teampointblank.lpms.ui.components.SessionStatusChip
 import com.teampointblank.lpms.ui.components.TonalButton
 import com.teampointblank.lpms.ui.theme.LpmsColors
 
@@ -79,23 +77,38 @@ fun AttendanceScreen(viewModel: AttendanceViewModel, onBack: () -> Unit) {
     Scaffold(
         containerColor = palette.background,
         topBar = {
+            val counts = AttendanceLogic.summary(roster, state.draft)
             LpmsTopBar(
-                title = "Attendance",
+                title = detail?.session?.programmeName ?: "Attendance",
                 onBack = { if (hasChanges) confirmDiscard = true else onBack() },
                 actions = {
                     IconButton(onClick = { viewModel.load() }, enabled = !state.isSaving) {
                         Icon(Icons.Outlined.Sync, contentDescription = "Reload", tint = palette.onHeader)
                     }
-                }
+                },
+                subtitle = detail?.session?.let {
+                    "${it.schoolName} · ${Formatters.weekdayDate(it.sessionDate)} ${Formatters.time(it.startTime)}"
+                },
+                footer = if (detail != null && roster.isNotEmpty()) {
+                    {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            HeaderStat("Present", counts.present, Modifier.weight(1f))
+                            HeaderStat("Absent", counts.absent, Modifier.weight(1f))
+                            HeaderStat("Not marked", counts.notMarked, Modifier.weight(1f))
+                        }
+                    }
+                } else null
             )
         },
         snackbarHost = { LpmsSnackbarHost(snackbarHostState) },
         bottomBar = {
             if (detail != null && roster.isNotEmpty() && canRecord) {
+                val notMarked = AttendanceLogic.summary(roster, state.draft).notMarked
                 SaveBar(
                     error = state.saveError,
                     isSaving = state.isSaving,
-                    enabled = hasChanges && !state.isSaving,
+                    label = AttendanceLogic.saveLabel(notMarked),
+                    enabled = AttendanceLogic.canSave(notMarked, hasChanges) && !state.isSaving,
                     onSave = { viewModel.save() }
                 )
             }
@@ -119,14 +132,9 @@ fun AttendanceScreen(viewModel: AttendanceViewModel, onBack: () -> Unit) {
                             if (state.loadError != null) {
                                 InfoBanner(text = state.loadError ?: "", isError = true)
                             }
-                            SessionHeader(
-                                detail.session.programmeName, detail.session.schoolName,
-                                detail.session.sessionDate, detail.session.startTime,
-                                detail.session.endTime, detail.session.status
-                            )
                             if (!canRecord) {
                                 InfoBanner(
-                                    text = "This session hasn't happened yet. You can take attendance on the day of the session."
+                                    text = "This session hasn't started yet. You can take attendance once it begins."
                                 )
                             }
                         }
@@ -134,7 +142,7 @@ fun AttendanceScreen(viewModel: AttendanceViewModel, onBack: () -> Unit) {
                     if (roster.isEmpty()) {
                         item { DashedEmpty("There are no learners registered at this school yet.") }
                     } else {
-                        item { SummaryRow(roster, state.draft, canRecord, onMarkAll = { viewModel.markAll(AttendanceLogic.PRESENT) }) }
+                        item { SummaryRow(canRecord, onMarkAll = { viewModel.markAll(AttendanceLogic.PRESENT) }) }
                         items(roster, key = { it.learnerId }) { learner ->
                             RosterRow(
                                 learner = learner,
@@ -165,46 +173,8 @@ fun AttendanceScreen(viewModel: AttendanceViewModel, onBack: () -> Unit) {
 }
 
 @Composable
-private fun SessionHeader(
-    programme: String,
-    school: String,
-    date: String,
-    start: String,
-    end: String,
-    status: String
-) {
-    val palette = LpmsColors.palette
-    LpmsCard {
-        Column(modifier = Modifier.padding(horizontal = 22.dp, vertical = 18.dp)) {
-            Text(programme, color = palette.text, style = MaterialTheme.typography.titleLarge)
-            Text(school, color = palette.textMuted, style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "${Formatters.date(date)}, ${Formatters.timeRange(start, end)}",
-                color = palette.text,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Spacer(Modifier.height(12.dp))
-            SessionStatusChip(status)
-        }
-    }
-}
-
-@Composable
-private fun SummaryRow(
-    roster: List<RosterEntry>,
-    draft: Map<Int, String>,
-    canRecord: Boolean,
-    onMarkAll: () -> Unit
-) {
-    val summary = AttendanceLogic.summary(roster, draft)
-    val palette = LpmsColors.palette
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(
-            "Present ${summary.present}  ·  Absent ${summary.absent}  ·  Not marked ${summary.notMarked}",
-            color = palette.text,
-            style = MaterialTheme.typography.titleSmall
-        )
+private fun SummaryRow(canRecord: Boolean, onMarkAll: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         TonalButton("All present", onClick = onMarkAll, enabled = canRecord)
     }
 }
@@ -279,7 +249,7 @@ private fun MarkPill(
 }
 
 @Composable
-private fun SaveBar(error: String?, isSaving: Boolean, enabled: Boolean, onSave: () -> Unit) {
+private fun SaveBar(error: String?, isSaving: Boolean, label: String, enabled: Boolean, onSave: () -> Unit) {
     val palette = LpmsColors.palette
     Surface(shadowElevation = 8.dp, color = palette.nav) {
         Column(
@@ -292,7 +262,7 @@ private fun SaveBar(error: String?, isSaving: Boolean, enabled: Boolean, onSave:
                 Text(error, color = palette.danger, style = MaterialTheme.typography.bodyMedium)
             }
             PrimaryButton(
-                text = "Save attendance",
+                text = label,
                 onClick = onSave,
                 enabled = enabled,
                 loading = isSaving
