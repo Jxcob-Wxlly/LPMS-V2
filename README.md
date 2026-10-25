@@ -27,13 +27,15 @@ A teacher signs in and can:
 - **add, edit and delete assessments** (score 0-100, date, notes);
 - use **Settings**: theme (light / dark / phone setting), larger text, remember username, server address with a connection test,
   change password, sign out;
+- **message parents** about a learner and read **announcements** from coordinators in the **Messages** tab;
 - open the built-in **Help** (FAQ) from the sign-in screen or Settings.
 
 A **parent / guardian** signs in with their own account and can:
 
 - see **only their own children** with average score and attendance;
 - see at a glance whether each child's attendance **meets their own expectation** (set in Settings, default 80%);
-- open a **child report** (assessments, recent attendance) and **download it as a PDF** to save, print or share.
+- open a **child report** (assessments, recent attendance) and **download it as a PDF** to save, print or share;
+- **message their child's teachers** (one conversation per child) and read school **announcements** in the **Messages** tab.
 
 Teachers can also create the same PDF from a learner's progress screen. The API enforces the separation: a parent gets
 403 for any child who is not linked to them, and for rosters, other learners and every teacher endpoint.
@@ -49,7 +51,7 @@ failure is turned into a friendly message.
 ```mermaid
 flowchart LR
     A["Android app<br/>(Kotlin, Compose)"] -- "HTTPS + JSON<br/>Bearer JWT" --> B["LPMS REST API<br/>ASP.NET Core 8<br/>Azure App Service"]
-    B -- "EF Core / TLS" --> C[("Azure SQL Database<br/>10 tables incl. User and ParentLearner")]
+    B -- "EF Core / TLS" --> C[("Azure SQL Database<br/>12 tables incl. User, ParentLearner, Message and Announcement")]
     D["GitHub / Azure DevOps<br/>CI pipeline"] -- "deploy" --> B
     D -- "debug APK artifact" --> A
 ```
@@ -78,6 +80,7 @@ lpms/
 │   ├── 01-create-schema.sql tables, keys, constraints, indexes
 │   ├── 02-seed-data.sql     simulated data (10+ rows per table, BCrypt-hashed passwords)
 │   ├── 03-demo-queries.sql  read-only queries used in the demo video
+│   ├── 04-seed-messages.sql sample conversations and announcements (run after 02)
 │   └── tools/generate-seed.py   generator + self-check for the seed data
 ├── docs/                    user guide, deployment guide, API reference, test plan, demo script, DevOps lifecycle
 ├── .github/workflows/ci.yml GitHub Actions: build, test, APK, deploy
@@ -88,8 +91,8 @@ lpms/
 
 ### 1. Database (Azure SQL or local SQL Server)
 
-Run the three scripts in `database/` in order (Azure portal **Query editor**, SSMS or Azure Data Studio):
-`01-create-schema.sql`, then `02-seed-data.sql`, then `03-demo-queries.sql` to check the data.
+Run the scripts in `database/` in order (Azure portal **Query editor**, SSMS or Azure Data Studio):
+`01-create-schema.sql`, then `02-seed-data.sql`, then `04-seed-messages.sql` (sample messages and announcements), then `03-demo-queries.sql` to check the data.
 The seed script uses dates relative to today, so there are always sessions today, upcoming and in the past.
 Full Azure steps are in [`docs/deployment-guide.md`](docs/deployment-guide.md).
 
@@ -138,7 +141,7 @@ All seeded accounts use the password **`Lpms@2026!`**.
 | Suite | Command | What it covers |
 |---|---|---|
 | API (xUnit, 100+ tests) | `dotnet test api/Lpms.sln` | every endpoint end-to-end over HTTP with an in-memory SQLite database: sign-in, roles, validation, attendance, progress, dashboard, parent access, business rules |
-| Android (JUnit, 73 tests) | `cd android && ./gradlew testDebugUnitTest` | validators (incl. create-account and new-session rules), formatters, attendance rules, parent report rules, error mapping, JSON contract with the API |
+| Android (JUnit, 82 tests) | `cd android && ./gradlew testDebugUnitTest` | validators (incl. create-account and new-session rules), formatters, attendance rules, parent report rules, error mapping, JSON contract with the API |
 
 Both suites run automatically on every push (see **CI/CD** below). The manual test table is in [`docs/test-plan.md`](docs/test-plan.md).
 

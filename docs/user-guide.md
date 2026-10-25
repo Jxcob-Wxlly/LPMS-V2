@@ -42,9 +42,9 @@ The app can remember your **username** (never your password). Turn this on or of
 
 If the email is already registered, tap **Sign in** instead.
 
-## 3. The four main screens
+## 3. The main screens
 
-The bar at the bottom of the screen switches between **Home**, **Sessions**, **Learners** and **Settings**.
+The bar at the bottom of the screen switches between **Home**, **Sessions**, **Learners**, **Messages** and **Settings**.
 
 ### 3.1 Home
 
@@ -115,6 +115,15 @@ are read-only. Deleting asks you to confirm first.
 The form checks your entries and shows a red message under any box that needs fixing, for example
 "The score must be between 0 and 100." or "The assessment date can't be in the future."
 
+### 3.6 Messages
+
+The **Messages** tab has two parts, switched with the chips at the top.
+
+- **Chats** lists one conversation for each parent of a learner at your school. Each card shows the parent, the learner, the last message and when it was sent. Tap one to open it, type in the box at the bottom and tap the arrow to send. Your messages are amber and on the right; the parent's are on the left. Conversations with messages come first.
+- **Announcements** shows notices from your coordinator, newest first. Each one shows who it is for (Everyone or Teachers), who wrote it and when.
+
+A message cannot be empty and can be at most 1000 characters; the app tells you if it is not valid and sends nothing.
+
 ## 3b. For parents and guardians
 
 Parents sign in with the username and password their school gave them (for example `parent01`). After signing in you land on **My children**.
@@ -127,6 +136,7 @@ Parents sign in with the username and password their school gave them (for examp
   print it, or send it by WhatsApp or email.
 - In **Settings > Attendance expectation**, drag the slider (50% to 100%) to set the attendance you expect. The app compares your
   child's attendance with it on the list, the report and in the PDF. The default is 80%.
+- **Messages** has one chat for each of your children with the teachers at their school, and an **Announcements** tab with notices from the school. Open a chat, type your message and tap the arrow. Teachers reply there, and the chat shows their name.
 - You can only see your own children. If you are not linked to a learner yet, the app says so; please contact READ Educational Trust.
 
 Teachers can also create this PDF: open a learner's progress screen and tap the share icon at the top.

@@ -22,6 +22,7 @@ The API tests replace SQL Server with SQLite in memory and a fixed clock (2026-1
 | `LearnerAndDashboardTests` | learners limited to the teacher's school, averages/rates/counts, search, coordinator school filter, no token; learner progress (ordering, label, read-only flags, other school 403, unknown 404); dashboard numbers and role check; schools, programmes, health |
 | `ParentTests` | parent sign-in and profile, own children only, second parent sees different child, no token, staff forbidden on parent endpoint, own child's report (read-only), other parent's child / other school / all learners / session roster / teacher endpoints all 403, teachers still see every report |
 | `RegisterTests` | public school list, register signs the teacher in and the password works, duplicate email (409), weak password, one-word name, bad email, unknown school |
+| `MessagingTests` | parent sees one conversation per child; teacher sees only their school's; coordinator sees all; parent-to-teacher and teacher-to-parent messages (sender role, `isMine`, last message); oldest-first order; other parent / other-school teacher 403; unlinked pair 404; blank and over-long messages 400; no token 401; announcements by audience and school, who may post, invalid audience / title / body / school |
 | `RulesUnitTests` | password length limit, BCrypt verify/different salts, session status rules |
 
 Run: `dotnet test api/Lpms.Api.sln` (results: GitHub Actions run > *Test* step, artifact `api-test-results`).
@@ -31,7 +32,7 @@ Run: `dotnet test api/Lpms.Api.sln` (results: GitHub Actions run > *Test* step, 
 | File | Covers |
 |---|---|
 | `ValidatorsTest` | create-account name, email, password, school; new-session programme, date (past, programme range) and times; identifier, passwords (length, upper/lower/digit, differs, confirm), score parsing (whole, decimal, comma, range, junk like `abc`, `-5`, `1e5`), date and notes rules, server address normalisation and rejection |
-| `AttendanceLogicTest` | draft from saved data, counts, marking all, change detection, save validation, order of entries, "future session" rule |
+| `AttendanceLogicTest` | draft from saved data, counts, marking all, change detection, save validation, order of entries, "future session" rule, save button label ("Mark N more to save") and when saving is allowed |
 | `FormattersTest` | dates, times, percentages, scores, names/initials, greeting, plurals, safe fallback on bad data |
 | `ApiErrorsTest` | message extraction from problem JSON, status code to error kind, friendly texts (never raw server text on 500) |
 | `ApiModelsTest` | the app reads the API's real JSON (login, session, learner progress, missing fields) and sends the names the API expects |
@@ -90,6 +91,12 @@ Fill in **Actual result**, **Pass/Fail** and **Date/tester** while testing; keep
 | M42 | Create account | Use an email that already exists | "An account with this email address already exists..." |  |  |
 | M43 | New session | Sessions > + New (or Home > New session) > choose programme, date, start, end > Save | "Session scheduled."; it appears under Upcoming |  |  |
 | M44 | New session | Date in the past is not selectable; end before start; overlapping an existing session | Past dates greyed out; messages for the other two |  |  |
+| M45 | Messages | Teacher: Messages tab > Chats > open a parent > type a message > send | Message appears on the right in amber; the parent sees it on the left with the teacher's name |
+| M46 | Messages | Parent: Messages tab > open a child's chat > reply | The teacher sees the reply; the list shows it as the last message |
+| M47 | Messages | Send an empty message; paste more than 1000 characters | "Type a message first." / "too long" message; nothing sent |
+| M48 | Announcements | Post one with Swagger (coordinator) for Parents; open Messages > Announcements as a parent and as a teacher | The parent sees it; the teacher does not |
+| M49 | Attendance | Open a future session | "This session hasn't started yet" note, Present/Absent dimmed, no save button |
+| M50 | Attendance | Open a past session, mark some learners | Header tiles count Present / Absent / Not marked; button says "Mark N more to save" and is disabled until everyone is marked |
 | M32 | Expiry | (Optional) set `Jwt__ExpiryMinutes=1`, wait, open a session | Returned to sign-in with "Your session has expired" |  |  |
 
 ## 5. Defect log

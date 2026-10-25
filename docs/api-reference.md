@@ -41,6 +41,11 @@ Passwords are verified against BCrypt hashes in the `User` table. Login is rate 
 | `PUT /api/progress/{id}` | Teacher (own entry) | Edit an assessment |
 | `DELETE /api/progress/{id}` | Teacher (own entry) | Delete an assessment (204) |
 | `GET /api/dashboard/teacher` | Teacher | Counts for the home screen |
+| `GET /api/messages/conversations` | any | The user's conversations, most recent first. Parents get one per child; teachers one per parent-learner pair at their school; coordinators and administrators all. Pairs with no messages come last |
+| `GET /api/messages/conversations/{learnerId}/{parentUserId}` | the parent, teachers at the learner's school, Coordinator, Administrator | Messages of one conversation, oldest first (`isMine` marks the caller's own). 403 for anyone else, 404 if the parent is not linked to the learner |
+| `POST /api/messages/conversations/{learnerId}/{parentUserId}` | same as above | Send a message (`body`, 1-1000 characters, 201). 400 for a blank or too long message |
+| `GET /api/announcements` | any | Announcements the user may read, newest first (max 50). Teachers: `Everyone` and `Teachers`; parents: `Everyone` and `Parents`; limited to their school (or all schools) |
+| `POST /api/announcements` | Coordinator, Administrator | Post an announcement (`title` max 100, `body` max 1000, `audience` Everyone / Teachers / Parents, optional `schoolId`; 201). Teachers and parents get 403 |
 | `GET /api/schools`, `GET /api/programmes` | any | Reference lists |
 | `GET /api/health` | anonymous | 200 when the database is reachable, otherwise 503 |
 
@@ -123,5 +128,7 @@ Automatic model validation returns `title: "One or more validation errors occurr
 - Assessment score 0-100 (2 decimals), date not in the future, notes at most 255 characters.
 - Registration: first and last name, valid email (unique across users and teachers), existing school, password policy; the username is made from the email's first part (a number is added if taken).
 - New sessions: end after start, date inside the programme's dates, teacher must work at the school, no overlap with the teacher's other sessions.
+- Messages: a conversation exists only for a parent linked to the learner (ParentLearner). Parents use their own conversations, teachers those of learners at their school. A message is 1-1000 characters after trimming.
+- Announcements: only coordinators and administrators post. `schoolId` empty means every school.
 - Session status: **Completed** (attendance recorded), **Pending** (finished, no attendance), **Upcoming** (anything else). Times are South African time.
 - New passwords: 8-100 characters with an uppercase letter, a lowercase letter and a digit, different from the old one.
