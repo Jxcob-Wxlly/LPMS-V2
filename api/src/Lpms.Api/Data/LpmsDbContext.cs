@@ -24,6 +24,8 @@ public class LpmsDbContext : DbContext
     public DbSet<Resource> Resources => Set<Resource>();
     public DbSet<UserAccount> Users => Set<UserAccount>();
     public DbSet<ParentLearner> ParentLearners => Set<ParentLearner>();
+    public DbSet<ConversationMessage> Messages => Set<ConversationMessage>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -163,6 +165,36 @@ public class LpmsDbContext : DbContext
             e.HasIndex(x => new { x.UserId, x.LearnerId }).IsUnique();
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Learner).WithMany().HasForeignKey(x => x.LearnerId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ConversationMessage>(e =>
+        {
+            e.ToTable("Message");
+            e.HasKey(x => x.MessageId);
+            e.Property(x => x.MessageId).HasColumnName("MessageID");
+            e.Property(x => x.LearnerId).HasColumnName("LearnerID");
+            e.Property(x => x.ParentUserId).HasColumnName("ParentUserID");
+            e.Property(x => x.SenderUserId).HasColumnName("SenderUserID");
+            e.Property(x => x.Body).HasMaxLength(1000);
+            e.HasIndex(x => new { x.LearnerId, x.ParentUserId, x.SentAt });
+            e.HasOne(x => x.Learner).WithMany().HasForeignKey(x => x.LearnerId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.ParentUser).WithMany().HasForeignKey(x => x.ParentUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.SenderUser).WithMany().HasForeignKey(x => x.SenderUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Announcement>(e =>
+        {
+            e.ToTable("Announcement");
+            e.HasKey(x => x.AnnouncementId);
+            e.Property(x => x.AnnouncementId).HasColumnName("AnnouncementID");
+            e.Property(x => x.AuthorUserId).HasColumnName("AuthorUserID");
+            e.Property(x => x.SchoolId).HasColumnName("SchoolID");
+            e.Property(x => x.Title).HasMaxLength(100);
+            e.Property(x => x.Body).HasMaxLength(1000);
+            e.Property(x => x.Audience).HasMaxLength(10);
+            e.HasIndex(x => x.CreatedAt);
+            e.HasOne(x => x.AuthorUser).WithMany().HasForeignKey(x => x.AuthorUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.School).WithMany().HasForeignKey(x => x.SchoolId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

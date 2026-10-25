@@ -150,3 +150,45 @@ public class ParentLearner
     public UserAccount User { get; set; } = null!;
     public Learner Learner { get; set; } = null!;
 }
+
+
+/// <summary>Allowed values of Announcement.Audience.</summary>
+public static class AnnouncementAudiences
+{
+    public const string Everyone = "Everyone";
+    public const string Teachers = "Teachers";
+    public const string Parents = "Parents";
+}
+
+/// <summary>
+/// One chat message. A conversation is identified by the pair (LearnerId, ParentUserId): the parent on one side,
+/// and the staff at the learner's school on the other. Mapped to the Message table.
+/// </summary>
+public class ConversationMessage
+{
+    public int MessageId { get; set; }
+    public int LearnerId { get; set; }
+    public int ParentUserId { get; set; }
+    public int SenderUserId { get; set; }
+    public string Body { get; set; } = string.Empty;
+    public DateTime SentAt { get; set; }
+
+    public Learner Learner { get; set; } = null!;
+    public UserAccount ParentUser { get; set; } = null!;
+    public UserAccount SenderUser { get; set; } = null!;
+}
+
+/// <summary>A notice from a coordinator or administrator. SchoolId = null means every school.</summary>
+public class Announcement
+{
+    public int AnnouncementId { get; set; }
+    public int AuthorUserId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Body { get; set; } = string.Empty;
+    public string Audience { get; set; } = AnnouncementAudiences.Everyone;
+    public int? SchoolId { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    public UserAccount AuthorUser { get; set; } = null!;
+    public School? School { get; set; }
+}

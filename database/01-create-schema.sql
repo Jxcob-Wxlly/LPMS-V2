@@ -34,6 +34,8 @@
 SET NOCOUNT ON;
 
 /* ---------- drop in reverse dependency order ---------- */
+DROP TABLE IF EXISTS dbo.Message;
+DROP TABLE IF EXISTS dbo.Announcement;
 DROP TABLE IF EXISTS dbo.Attendance;
 DROP TABLE IF EXISTS dbo.Progress;
 DROP TABLE IF EXISTS dbo.Session;
@@ -201,4 +203,42 @@ CREATE TABLE dbo.ParentLearner (
 );
 CREATE INDEX IX_ParentLearner_LearnerID ON dbo.ParentLearner (LearnerID);
 
-PRINT 'LPMS schema created: 10 tables.';
+/* ---------- Message (parent <-> staff conversations) ----------
+   A conversation is the pair (LearnerID, ParentUserID): the parent on one side and
+   the staff at that learner's school on the other. SenderUserID is whoever wrote the
+   message (the parent, a teacher, a coordinator or an administrator). */
+CREATE TABLE dbo.Message (
+    MessageID    INT IDENTITY(1,1) NOT NULL,
+    LearnerID    INT               NOT NULL,
+    ParentUserID INT               NOT NULL,
+    SenderUserID INT               NOT NULL,
+    Body         NVARCHAR(1000)    NOT NULL,
+    SentAt       DATETIME2(0)      NOT NULL CONSTRAINT DF_Message_SentAt DEFAULT (SYSDATETIME()),
+    CONSTRAINT PK_Message              PRIMARY KEY (MessageID),
+    CONSTRAINT FK_Message_Learner      FOREIGN KEY (LearnerID)    REFERENCES dbo.Learner (LearnerID),
+    CONSTRAINT FK_Message_ParentUser   FOREIGN KEY (ParentUserID) REFERENCES dbo.[User] (UserID),
+    CONSTRAINT FK_Message_SenderUser   FOREIGN KEY (SenderUserID) REFERENCES dbo.[User] (UserID),
+    CONSTRAINT CK_Message_Body         CHECK (LEN(LTRIM(RTRIM(Body))) > 0)
+);
+CREATE INDEX IX_Message_Conversation ON dbo.Message (LearnerID, ParentUserID, SentAt);
+
+/* ---------- Announcement (notices from coordinators and administrators) ----------
+   Audience says who may read it; SchoolID NULL means every school. */
+CREATE TABLE dbo.Announcement (
+    AnnouncementID INT IDENTITY(1,1) NOT NULL,
+    AuthorUserID   INT               NOT NULL,
+    Title          NVARCHAR(100)     NOT NULL,
+    Body           NVARCHAR(1000)    NOT NULL,
+    Audience       NVARCHAR(10)      NOT NULL CONSTRAINT DF_Announcement_Audience DEFAULT (N'Everyone'),
+    SchoolID       INT               NULL,
+    CreatedAt      DATETIME2(0)      NOT NULL CONSTRAINT DF_Announcement_CreatedAt DEFAULT (SYSDATETIME()),
+    CONSTRAINT PK_Announcement             PRIMARY KEY (AnnouncementID),
+    CONSTRAINT FK_Announcement_AuthorUser  FOREIGN KEY (AuthorUserID) REFERENCES dbo.[User] (UserID),
+    CONSTRAINT FK_Announcement_School      FOREIGN KEY (SchoolID)     REFERENCES dbo.School (SchoolID),
+    CONSTRAINT CK_Announcement_Audience    CHECK (Audience IN (N'Everyone', N'Teachers', N'Parents')),
+    CONSTRAINT CK_Announcement_Title       CHECK (LEN(LTRIM(RTRIM(Title))) > 0),
+    CONSTRAINT CK_Announcement_Body        CHECK (LEN(LTRIM(RTRIM(Body))) > 0)
+);
+CREATE INDEX IX_Announcement_CreatedAt ON dbo.Announcement (CreatedAt DESC);
+
+PRINT 'LPMS schema created: 12 tables.';
