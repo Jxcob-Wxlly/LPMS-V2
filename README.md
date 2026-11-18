@@ -206,7 +206,7 @@ The workflow [`ci.yml`](.github/workflows/ci.yml) runs on every push and pull re
 3. **Deploy:** on `main`, when the Azure publish profile secret is set, deploys the API to Azure App Service and smoke-tests `/api/health`.
 
 The pipeline has caught real mistakes during development (for example, wrong imports that broke the Android build), which is exactly its purpose.
-To get the APK without Android Studio: open the latest green run under **Actions**, then download the `lpms-debug-apk` artifact.
+To get the APK without Android Studio: open the latest green run under **Actions**, then download the `lpms-teacher-debug-apk` artifact.
 
 ## Release notes
 
