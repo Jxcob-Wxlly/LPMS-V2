@@ -2,10 +2,10 @@
 
 [![CI](https://github.com/Jxcob-Wxlly/LPMS-V2/actions/workflows/ci.yml/badge.svg)](https://github.com/Jxcob-Wxlly/LPMS-V2/actions/workflows/ci.yml)
 
-**Client:** READ Educational Trust  **Team:** Team Point Blank  **Module:** XISD6329 (Task 2)
+**Client:** READ Educational Trust  **Team:** Team Point Blank  **Module:** XISD6329 WIL 3B (Task 2 and Task 3, final submission)
 
 LPMS replaces the paper registers and spreadsheets READ Educational Trust uses to run its school literacy programmes.
-This repository holds the Task 2 build: the **mobile app (Android) for teachers and parents**, the **REST API** that the app talks to, and the
+This repository holds the build for Task 2 and the final Task 3 version: the **mobile app (Android) for teachers and parents**, the **REST API** that the app talks to, and the
 **relational database**, plus the DevOps pipelines, automated tests and documentation.
 
 | Part | Technology | Folder |
@@ -15,6 +15,38 @@ This repository holds the Task 2 build: the **mobile app (Android) for teachers 
 | Database | SQL Server / Azure SQL (T-SQL scripts) | [`database/`](database) |
 | Pipelines | GitHub Actions and Azure DevOps | [`.github/workflows/`](.github/workflows), [`azure-pipelines.yml`](azure-pipelines.yml) |
 | Documentation | Markdown | [`docs/`](docs) |
+
+## Screenshots
+
+Taken on a physical Android phone running the app.
+
+| Sign in | Create account | Home | Sessions | Attendance |
+|---|---|---|---|---|
+| <img src="docs/images/app-signin.jpg" width="150"> | <img src="docs/images/app-create-account.jpg" width="150"> | <img src="docs/images/app-home.jpg" width="150"> | <img src="docs/images/app-sessions.jpg" width="150"> | <img src="docs/images/app-attendance.jpg" width="150"> |
+
+| New session | Learners | Learner progress | PDF report | Settings (dark) |
+|---|---|---|---|---|
+| <img src="docs/images/app-new-session.jpg" width="150"> | <img src="docs/images/app-learners.jpg" width="150"> | <img src="docs/images/app-learner.jpg" width="150"> | <img src="docs/images/app-report.jpg" width="150"> | <img src="docs/images/app-settings-dark.jpg" width="150"> |
+
+The management website (Task 1, a separate repository: [Jxcob-Wxlly/lpms](https://github.com/Jxcob-Wxlly/lpms)) looks like this:
+
+<img src="docs/images/web-dashboard.png" width="620">
+
+## Purpose and design considerations
+
+**Purpose.** READ Educational Trust runs literacy programmes in many under-resourced schools. Attendance and learner progress are kept on paper and in
+spreadsheets, so reports to donors are late, records are duplicated and nobody has one view of whether the programmes work. LPMS gives teachers a fast way to record
+attendance and scores on a phone, gives parents a read-only view of their own children plus a direct line to the teacher, and keeps everything in one database that
+coordinators can report from.
+
+**Design considerations**
+
+- **Built for the classroom:** large touch targets, five-tab bottom navigation, taking attendance is two taps from Home, light, dark and large-text options.
+- **One design system:** teal and amber, Bricolage Grotesque and Figtree fonts bundled in the app, the same components on every screen, following the mockups designed before building.
+- **Invalid input never crashes the app:** every field is validated on the phone and again in the API, and network errors become friendly messages.
+- **Least privilege:** parents see only their own children, teachers only their school; the rules live in the API, not only in the app.
+- **Security:** BCrypt password hashes, JWT sessions, encrypted token storage on the phone, rate-limited sign-in, secrets kept in Azure settings and never in the code.
+- **Testable:** business rules are pure Kotlin functions and the API is tested end to end, so changes are safe to make.
 
 ## What the app does
 
@@ -163,6 +195,36 @@ on `main`, deploys the API to Azure App Service and smoke-tests `/api/health`.
 | Monitor | `GET /api/health` smoke test, App Service logs and metrics |
 
 More detail: [`docs/devops-lifecycle.md`](docs/devops-lifecycle.md).
+
+### How GitHub and GitHub Actions are used
+
+The whole project (app, API, database scripts and docs) lives in this one repository so a single clone contains everything. Work is committed in small steps with messages that say what changed.
+The workflow [`ci.yml`](.github/workflows/ci.yml) runs on every push and pull request to `main` with three jobs:
+
+1. **API - build and test:** restores, builds and runs the xUnit tests, uploads the test results and the published API as artifacts.
+2. **Android - unit tests and debug APK:** runs the JUnit tests, builds the debug APK and uploads it (and the test report) as downloadable artifacts.
+3. **Deploy:** on `main`, when the Azure publish profile secret is set, deploys the API to Azure App Service and smoke-tests `/api/health`.
+
+The pipeline has caught real mistakes during development (for example, wrong imports that broke the Android build), which is exactly its purpose.
+To get the APK without Android Studio: open the latest green run under **Actions**, then download the `lpms-debug-apk` artifact.
+
+## Release notes
+
+Full notes: [`RELEASE_NOTES.md`](RELEASE_NOTES.md). Summary of what changed since the Task 2 prototype (1.0):
+
+**Innovative features added in 1.1 (final)**
+
+- **Parent and teacher messaging:** one conversation per learner between a parent and the teachers at that school, with access checked in the API.
+- **Targeted announcements:** coordinators and administrators post to Everyone, Teachers or Parents, for all schools or one school.
+- **Attendance that guides the teacher:** Present, Absent and Not marked tiles, and a save button that counts down what is left so a register is never saved half done.
+
+**Other changes:** Create account and New session screens, Messages tab, database grown to 12 tables (Message, Announcement) with seed data, about 35 new automated tests, GitHub Actions pipeline, updated documentation.
+
+## Single sign-on and publication status
+
+- **SSO:** the group's Firebase build ([PSYCHOHITMAN/LPMS-Mobile](https://github.com/PSYCHOHITMAN/LPMS-Mobile)) has Google sign-in. This repository signs users in with its own API (JWT and BCrypt); Google sign-in for the API and the website is the next planned step and is not built yet.
+- **Publication:** the group repository holds release signing, store listing text and release notes. A Google Play Console upload has not been done. This repository builds a debug APK in CI on every push.
+- **Hosting:** the Azure SQL database and App Service exist; at the time of writing the hosted API still reported its database as unavailable, which is being investigated (the health endpoint now logs the error).
 
 ## Documentation
 
